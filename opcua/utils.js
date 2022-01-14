@@ -2,29 +2,43 @@
 const opcua = require("node-opcua");
 const path = require("path");
 const envPaths = require("env-paths");
-const config = envPaths("node-red-opcua").config;
+const opcuaConfig = envPaths("node-red-opcua").config;
 
 
-let _g_certificateManager = null;
-function createCertificateManager(autoAccept) {
-    if (_g_certificateManager) {
-        return _g_certificateManager;
+function getCertificateManagerRootParent(customDir) {
+    // If path is null/undefined or empty string, use default config path
+    if (customDir && customDir.trim().length != 0) {
+        return customDir;
+    } else {
+        return opcuaConfig;
     }
-    return _g_certificateManager = new opcua.OPCUACertificateManager({
+}
+
+// Create the certificate manager for PKI from options. Options include:
+//  autoAccept (required): boolean, whether or not to automatically accept unknown certificates
+//  certManagerDir (optional): string, a custom path for the root folder of the certificate manager.
+//    If not given, uses the default config folder for nodejs app node-red-opcua.
+function createCertificateManager(options) {
+    const rootFolderParent = getCertificateManagerRootParent(options.certManagerDir);
+    const rootFolder = path.join(rootFolderParent, "PKI");
+    return new opcua.OPCUACertificateManager({
         name: "PKI",
-        rootFolder: path.join(config, "PKI"),
-        automaticallyAcceptUnknownCertificate: autoAccept
+        rootFolder,
+        automaticallyAcceptUnknownCertificate: options.autoAccept
     });
 }
-let _g_userCertificateManager = null;
-function createUserCertificateManager(autoAccept) {
-    if (_g_userCertificateManager) 
-     return _g_userCertificateManager;
 
+// Create the certificate manager for UserPKI from options. Options include:
+//  autoAccept (required): boolean, whether or not to automatically accept unknown certificates
+//  certManagerDir (optional): string, a custom path for the root folder of the certificate manager.
+//    If not given, uses the default config folder for nodejs app node-red-opcua.
+function createUserCertificateManager(options) {
+    const rootFolderParent = getCertificateManagerRootParent(options.certManagerDir);
+    const rootFolder = path.join(rootFolderParent, "UserPKI");
     return _g_userCertificateManager = new opcua.OPCUACertificateManager({
         name: "UserPKI",
-        rootFolder: path.join(config, "UserPKI"),
-        automaticallyAcceptUnknownCertificate: autoAccept
+        rootFolder,
+        automaticallyAcceptUnknownCertificate: options.autoAccept
     });
 }
 

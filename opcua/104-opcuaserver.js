@@ -39,6 +39,7 @@ module.exports = function (RED) {
         this.endpoint = n.endpoint;
         this.users = n.users;
         this.nodesetDir = n.nodesetDir;
+        this.certManagerDir = n.certManagerDir;
         this.autoAcceptUnknownCertificate = n.autoAcceptUnknownCertificate;
         this.allowAnonymous = n.allowAnonymous;
         this.endpointNone = n.endpointNone;
@@ -198,8 +199,14 @@ module.exports = function (RED) {
             verbose_warn("create Server from XML ...");
             // DO NOT USE "%FQDN%" anymore, hostname is OK
             const applicationUri =  opcua.makeApplicationUrn(os.hostname(), "node-red-contrib-opcua-server");
-            const serverCertificateManager = createCertificateManager(node.autoAcceptUnknownCertificate);
-            const userCertificateManager = createUserCertificateManager(node.autoAcceptUnknownCertificate);
+
+            const useCustomCertManager = n.customCertManagerPath.trim().length != 0;
+            const certManagerOptions = {
+                autoAccept: node.autoAcceptUnknownCertificate,
+                certManagerDir: node.certManagerDir,
+            };
+            const serverCertificateManager = createCertificateManager(certManagerOptions);
+            const userCertificateManager = createUserCertificateManager(certManagerOptions);
 
 
             var registerMethod = null;
